@@ -16,4 +16,4 @@ jobs:
       - name: Ping Render
         run: |
           curl --fail --silent --show-error --retry 3 --retry-delay 5 --max-time 60 \
-            https://dismissed-social-factory.onrender.com/health
+            https://dismissed-social-live.onrender.com/health
