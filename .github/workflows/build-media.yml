@@ -1,0 +1,47 @@
+name: Build Dismissed media
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/generate-media.js"
+      - ".github/workflows/build-media.yml"
+  schedule:
+    - cron: "20 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dismissed-media
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout app
+        uses: actions/checkout@v4
+
+      - name: Ensure FFmpeg
+        run: |
+          ffmpeg -version || (sudo apt-get update && sudo apt-get install -y ffmpeg)
+
+      - name: Generate today and tomorrow
+        env:
+          MEDIA_OUT: /tmp/dismissed-media
+        run: node scripts/generate-media.js
+
+      - name: Publish clean media branch
+        run: |
+          git config user.name "dismissed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout --orphan media-next
+          git rm -rf . >/dev/null 2>&1 || true
+          cp -R /tmp/dismissed-media/. .
+          touch .nojekyll
+          git add -A
+          git commit -m "Refresh generated reels"
+          git push --force origin HEAD:media
