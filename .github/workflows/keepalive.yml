@@ -1,0 +1,19 @@
+name: Keep publisher awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping Render
+        run: |
+          curl --fail --silent --show-error --retry 3 --retry-delay 5 --max-time 60 \
+            https://dismissed-social-factory.onrender.com/health
