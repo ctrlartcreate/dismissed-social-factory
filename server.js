@@ -45,12 +45,11 @@ async function download(url,out){
   fs.writeFileSync(out,Buffer.from(await r.arrayBuffer()));
 }
 function filterFor(slot,title){
-  const safe=title.replace(/:/g,'\\:').replace(/'/g,"\\'");
-  if(slot===0) return "scale=760:-2,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=0xF1F0EB,zoompan=z='min(zoom+0.00045,1.07)':d=168:s=1080x1920:fps=24,drawbox=x=70:y=75:w=940:h=1770:color=black@0.10:t=1,drawtext=text='DISMISSED':fontcolor=black:fontsize=34:x=70:y=95,drawtext=text='"+safe+"':fontcolor=black:fontsize=58:x=70:y=1740";
-  if(slot===1) return "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,zoompan=z='1.12-0.00055*on':d=168:s=1080x1920:fps=24,eq=contrast=1.18:saturation=0.10,drawbox=x=0:y=0:w=1080:h=150:color=black@0.75:t=fill,drawtext=text='OPTICAL SURVEILLANCE':fontcolor=white:fontsize=26:x=58:y=58";
-  if(slot===2) return "scale=820:-2,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,zoompan=z='1.02+0.015*sin(on/14)':d=168:s=1080x1920:fps=24,drawgrid=w=180:h=180:t=1:c=white@0.07,drawbox=x=0:y='250+mod(t*380,1300)':w=1080:h=4:color=red@0.82:t=fill,drawtext=text='CASE FILE':fontcolor=white:fontsize=28:x=64:y=90,drawtext=text='"+safe+"':fontcolor=white:fontsize=52:x=64:y=1740";
-  if(slot===3) return "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,zoompan=z='min(zoom+0.00075,1.12)':x='iw/2-(iw/zoom/2)+18*sin(on/11)':y='ih/2-(ih/zoom/2)':d=168:s=1080x1920:fps=24,eq=contrast=1.10:saturation=0.55,drawbox=x=58:y=1420:w=700:h=250:color=black@0.68:t=fill,drawtext=text='FORENSIC AUDIO':fontcolor=white:fontsize=24:x=82:y=1470,drawtext=text='"+safe+"':fontcolor=white:fontsize=48:x=82:y=1540";
-  return "scale=800:-2,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,zoompan=z='min(zoom+0.00035,1.055)':d=168:s=1080x1920:fps=24,drawgrid=w=135:h=135:t=1:c=white@0.06,drawbox=x=70:y=145:w=940:h=1470:color=white@0.12:t=1,drawtext=text='DISMISSED / FUTURE BLUEPRINT':fontcolor=white:fontsize=25:x=70:y=90,drawtext=text='"+safe+"':fontcolor=white:fontsize=54:x=70:y=1700";
+  if(slot===0) return "scale=760:-2,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=0xF1F0EB,zoompan=z='min(zoom+0.00045,1.07)':d=168:s=1080x1920:fps=24,drawbox=x=70:y=75:w=940:h=1770:color=black@0.10:t=1";
+  if(slot===1) return "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,zoompan=z='1.12-0.00055*on':d=168:s=1080x1920:fps=24,eq=contrast=1.18:saturation=0.10,drawbox=x=0:y=0:w=1080:h=150:color=black@0.75:t=fill";
+  if(slot===2) return "scale=820:-2,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,zoompan=z='1.02+0.015*sin(on/14)':d=168:s=1080x1920:fps=24,drawgrid=w=180:h=180:t=1:c=white@0.07,drawbox=x=0:y='250+mod(t*380,1300)':w=1080:h=4:color=red@0.82:t=fill";
+  if(slot===3) return "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,zoompan=z='min(zoom+0.00075,1.12)':x='iw/2-(iw/zoom/2)+18*sin(on/11)':y='ih/2-(ih/zoom/2)':d=168:s=1080x1920:fps=24,eq=contrast=1.10:saturation=0.55,drawbox=x=58:y=1420:w=700:h=250:color=black@0.68:t=fill";
+  return "scale=800:-2,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,zoompan=z='min(zoom+0.00035,1.055)':d=168:s=1080x1920:fps=24,drawgrid=w=135:h=135:t=1:c=white@0.06,drawbox=x=70:y=145:w=940:h=1470:color=white@0.12:t=1";
 }
 async function generateVideo(date,slot){
   slot=Math.max(0,Math.min(4,Number(slot)));
