@@ -32,7 +32,7 @@ jobs:
       - name: Generate today and tomorrow
         env:
           MEDIA_OUT: /tmp/dismissed-media
-        run: node scripts/generate-media.js
+        run: python3 scripts/generate-media-v4.py
 
       - name: HARD RULE - every reel must contain audio
         run: |
