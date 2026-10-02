@@ -11,7 +11,7 @@ const IG_APP_SECRET=process.env.IG_APP_SECRET||'';
 const IG_ACCESS_TOKEN=process.env.IG_ACCESS_TOKEN||'';
 const IG_USER_ID=process.env.IG_USER_ID||'';
 const ADMIN_KEY=process.env.ADMIN_KEY||'';
-const GRAPH_VERSION=process.env.GRAPH_VERSION||'v24.0';
+const GRAPH_VERSION=process.env.GRAPH_VERSION||'v26.0';
 const DIR='/tmp/dismissed-social-factory';
 fs.mkdirSync(DIR,{recursive:true});
 
@@ -90,15 +90,15 @@ async function publishReel(date,slot){
     share_to_feed:'true',
     access_token:IG_ACCESS_TOKEN
   });
-  const container=await graphJson('https://graph.facebook.com/'+GRAPH_VERSION+'/'+IG_USER_ID+'/media',{
+  const container=await graphJson('https://graph.instagram.com/'+GRAPH_VERSION+'/'+IG_USER_ID+'/media',{
     method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:createParams
   });
   for(let i=0;i<30;i++){
     await sleep(5000);
-    const status=await graphJson('https://graph.facebook.com/'+GRAPH_VERSION+'/'+container.id+'?fields=status_code,status&access_token='+encodeURIComponent(IG_ACCESS_TOKEN));
+    const status=await graphJson('https://graph.instagram.com/'+GRAPH_VERSION+'/'+container.id+'?fields=status_code,status&access_token='+encodeURIComponent(IG_ACCESS_TOKEN));
     if(status.status_code==='FINISHED'){
       const params=new URLSearchParams({creation_id:container.id,access_token:IG_ACCESS_TOKEN});
-      return graphJson('https://graph.facebook.com/'+GRAPH_VERSION+'/'+IG_USER_ID+'/media_publish',{
+      return graphJson('https://graph.instagram.com/'+GRAPH_VERSION+'/'+IG_USER_ID+'/media_publish',{
         method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:params
       });
     }
@@ -148,9 +148,18 @@ http.createServer(async(req,res)=>{
       const r=await fetch('https://api.instagram.com/oauth/access_token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body});
       const j=await r.json();
       if(!r.ok||!j.access_token) throw new Error(JSON.stringify(j));
-      const me=await graphJson('https://graph.instagram.com/me?fields=user_id,username&access_token='+encodeURIComponent(j.access_token));
+      let token=j.access_token;
+      try{
+        const exchanged=await graphJson('https://graph.instagram.com/access_token?'+new URLSearchParams({
+          grant_type:'ig_exchange_token',
+          client_secret:IG_APP_SECRET,
+          access_token:token
+        }).toString());
+        if(exchanged.access_token) token=exchanged.access_token;
+      }catch(e){console.warn('Long-lived token exchange failed; using short-lived token');}
+      const userId=String(j.user_id||'');
       res.setHeader('content-type','text/html');
-      return res.end('<body style="background:#080808;color:white;font-family:Arial;padding:36px"><h1>INSTAGRAM AUTHORIZED</h1><p>Add these values once in this Render service Environment. Do not send them in chat.</p><b>IG_USER_ID</b><pre>'+esc(me.user_id||me.id||j.user_id||'')+'</pre><b>IG_ACCESS_TOKEN</b><pre style="white-space:pre-wrap;word-break:break-all">'+esc(j.access_token)+'</pre></body>');
+      return res.end('<body style="background:#080808;color:white;font-family:Arial;padding:36px"><h1>INSTAGRAM AUTHORIZED</h1><p>Authorization succeeded. Add these values once in this Render service Environment. Do not send them in chat.</p><b>IG_USER_ID</b><pre>'+esc(userId)+'</pre><b>IG_ACCESS_TOKEN</b><pre style="white-space:pre-wrap;word-break:break-all">'+esc(token)+'</pre></body>');
     }
     const m=u.pathname.match(/^\/video\/(\d{4}-\d{2}-\d{2})\/(\d)\.mp4$/);
     if(m){
