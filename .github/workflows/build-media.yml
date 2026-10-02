@@ -34,6 +34,24 @@ jobs:
           MEDIA_OUT: /tmp/dismissed-media
         run: node scripts/generate-media.js
 
+      - name: HARD RULE - every reel must contain audio
+        run: |
+          set -e
+          count=0
+          while IFS= read -r -d '' f; do
+            count=$((count+1))
+            audio=$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_type -of csv=p=0 "$f")
+            if [ "$audio" != "audio" ]; then
+              echo "ERROR: reel has no audio: $f"
+              exit 1
+            fi
+            echo "AUDIO OK: $f"
+          done < <(find /tmp/dismissed-media -name '*.mp4' -print0)
+          if [ "$count" -lt 10 ]; then
+            echo "ERROR: expected 10 reels, found $count"
+            exit 1
+          fi
+
       - name: Publish clean media branch
         run: |
           git config user.name "dismissed-bot"
