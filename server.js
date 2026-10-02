@@ -45,31 +45,49 @@ async function download(url,out){
   fs.writeFileSync(out,Buffer.from(await r.arrayBuffer()));
 }
 function filterFor(slot,title){
-  if(slot===0) return "scale=760:-2,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=0xF1F0EB,zoompan=z='min(zoom+0.00045,1.07)':d=168:s=1080x1920:fps=24,drawbox=x=70:y=75:w=940:h=1770:color=black@0.10:t=1";
-  if(slot===1) return "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,zoompan=z='1.12-0.00055*on':d=168:s=1080x1920:fps=24,eq=contrast=1.18:saturation=0.10,drawbox=x=0:y=0:w=1080:h=150:color=black@0.75:t=fill";
-  if(slot===2) return "scale=820:-2,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,zoompan=z='1.02+0.015*sin(on/14)':d=168:s=1080x1920:fps=24,drawgrid=w=180:h=180:t=1:c=white@0.07,drawbox=x=0:y='250+mod(t*380,1300)':w=1080:h=4:color=red@0.82:t=fill";
-  if(slot===3) return "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,zoompan=z='min(zoom+0.00075,1.12)':x='iw/2-(iw/zoom/2)+18*sin(on/11)':y='ih/2-(ih/zoom/2)':d=168:s=1080x1920:fps=24,eq=contrast=1.10:saturation=0.55,drawbox=x=58:y=1420:w=700:h=250:color=black@0.68:t=fill";
-  return "scale=800:-2,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,zoompan=z='min(zoom+0.00035,1.055)':d=168:s=1080x1920:fps=24,drawgrid=w=135:h=135:t=1:c=white@0.06,drawbox=x=70:y=145:w=940:h=1470:color=white@0.12:t=1";
+  if(slot===0) return "scale=900:1500:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=0xF1F0EB,zoompan=z='min(zoom+0.00035,1.055)':d=168:s=1080x1920:fps=24,drawbox=x=70:y=70:w=940:h=1780:color=black@0.10:t=2";
+  if(slot===1) return "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,zoompan=z='1.08-0.00030*on':d=168:s=1080x1920:fps=24,eq=contrast=1.16:saturation=0.18,drawbox=x=0:y=0:w=1080:h=130:color=black@0.72:t=fill";
+  if(slot===2) return "scale=900:1500:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,zoompan=z='1.015+0.010*sin(on/16)':d=168:s=1080x1920:fps=24,drawgrid=w=180:h=180:t=1:c=white@0.07,drawbox=x=0:y='260+mod(t*360,1250)':w=1080:h=4:color=red@0.82:t=fill";
+  if(slot===3) return "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,zoompan=z='min(zoom+0.00045,1.075)':x='iw/2-(iw/zoom/2)+12*sin(on/12)':y='ih/2-(ih/zoom/2)':d=168:s=1080x1920:fps=24,eq=contrast=1.08:saturation=0.52,drawbox=x=55:y=1430:w=710:h=220:color=black@0.62:t=fill";
+  return "scale=900:1500:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,zoompan=z='min(zoom+0.00025,1.045)':d=168:s=1080x1920:fps=24,drawgrid=w=135:h=135:t=1:c=white@0.055,drawbox=x=70:y=145:w=940:h=1470:color=white@0.12:t=2";
 }
+
 async function generateVideo(date,slot){
   slot=Math.max(0,Math.min(4,Number(slot)));
   const product=pick(date,slot);
   const outfile=path.join(DIR,date+'-'+slot+'.mp4');
   if(fs.existsSync(outfile)&&fs.statSync(outfile).size>100000) return outfile;
+
   const ext=product.image.includes('.jpg')?'.jpg':'.png';
   const image=path.join(DIR,'product-'+product.caseNo+ext);
   await download(product.image,image);
+
   const filter=filterFor(slot,product.title);
   const freq=46+slot*7;
-  const args=['-y','-loop','1','-i',image,
+  const args=[
+    '-y',
+    '-loop','1','-i',image,
     '-f','lavfi','-i','sine=frequency='+freq+':sample_rate=48000:duration=7',
-    '-f','lavfi','-i','anoisesrc=color=pink:sample_rate=48000:duration=7:amplitude=0.03',
-    '-filter_complex','[0:v]'+filter+'[v];[1:a]volume=0.20[a0];[2:a]volume=0.24[a1];[a0][a1]amix=inputs=2:duration=shortest,afade=t=in:st=0:d=.12,afade=t=out:st=6.45:d=.35[a]',
-    '-map','[v]','-map','[a]','-t','7','-r','24','-c:v','libx264','-preset','veryfast','-crf','19','-pix_fmt','yuv420p','-c:a','aac','-ar','48000','-b:a','128k','-movflags','+faststart',outfile];
+    '-vf',filter,
+    '-af','volume=0.18',
+    '-t','7',
+    '-r','24',
+    '-c:v','libx264',
+    '-preset','veryfast',
+    '-crf','19',
+    '-pix_fmt','yuv420p',
+    '-c:a','aac',
+    '-ar','48000',
+    '-b:a','128k',
+    '-shortest',
+    '-movflags','+faststart',
+    outfile
+  ];
   const run=cp.spawnSync(ffmpeg,args,{encoding:'utf8',maxBuffer:20*1024*1024});
-  if(run.status!==0) throw new Error((run.stderr||'ffmpeg failed').slice(-2500));
+  if(run.status!==0) throw new Error((run.stderr||'ffmpeg failed').slice(-3500));
   return outfile;
 }
+
 async function graphJson(url,opts={}){
   const r=await fetch(url,opts);
   const j=await r.json().catch(()=>({}));
@@ -117,7 +135,7 @@ function html(){
     const p=pick(date,s);
     return '<div class="row"><div><b>'+String(t).padStart(2,'0')+':00</b><div class="muted">'+esc(p.title)+' · CASE '+p.caseNo+'</div></div><a class="button" href="/video/'+date+'/'+s+'.mp4">PREVIEW</a></div>';
   }).join('');
-  return '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;background:#080808;color:#f6f6f1;font-family:Arial,sans-serif}main{max-width:920px;margin:auto;padding:34px 22px}.eyebrow{letter-spacing:.19em;color:#777;font-size:11px}.hero{font-size:clamp(52px,9vw,96px);line-height:.86;margin:24px 0 38px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#222}.stat{background:#080808;padding:18px}.ok{color:#8ce3a7}.bad{color:#ff8d8d}.row{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #242424;padding:18px 0}.muted{color:#888;margin-top:6px}.button{color:white;text-decoration:none;border:1px solid #444;padding:10px 12px}.note{color:#777;line-height:1.5}@media(max-width:650px){.grid{grid-template-columns:1fr}.hero{font-size:58px}}</style><main><div class="eyebrow">DISMISSED / SOCIAL FACTORY</div><div class="hero">5 REELS<br>PER DAY.</div><div class="grid"><div class="stat '+(IG_APP_SECRET?'ok':'bad')+'">APP SECRET<br>'+(IG_APP_SECRET?'READY':'MISSING')+'</div><div class="stat '+(IG_ACCESS_TOKEN?'ok':'bad')+'">ACCESS TOKEN<br>'+(IG_ACCESS_TOKEN?'READY':'MISSING')+'</div><div class="stat '+(IG_USER_ID?'ok':'bad')+'">INSTAGRAM<br>'+(IG_USER_ID?'CONNECTED':'NOT STORED')+'</div></div><p><a class="button" href="/connect">CONNECT INSTAGRAM</a></p><h2>TODAY / '+date+'</h2>'+cards+'<p class="note">Schedule: 10:00 · 13:00 · 16:00 · 19:00 · 22:00 Europe/Bucharest. Videos are 1080×1920, H.264 + AAC, 24 fps.</p></main>';
+  return '<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;background:#080808;color:#f6f6f1;font-family:Arial,sans-serif}main{max-width:920px;margin:auto;padding:34px 22px}.eyebrow{letter-spacing:.19em;color:#777;font-size:11px}.hero{font-size:clamp(52px,9vw,96px);line-height:.86;margin:24px 0 38px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#222}.stat{background:#080808;padding:18px}.ok{color:#8ce3a7}.bad{color:#ff8d8d}.row{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #242424;padding:18px 0}.muted{color:#888;margin-top:6px}.button{color:white;text-decoration:none;border:1px solid #444;padding:10px 12px}.note{color:#777;line-height:1.5}@media(max-width:650px){.grid{grid-template-columns:1fr}.hero{font-size:58px}}</style><main><div class="eyebrow">DISMISSED / SOCIAL FACTORY</div><div class="hero">5 REELS<br>PER DAY.</div><div class="grid"><div class="stat '+(IG_APP_SECRET?'ok':'bad')+'">APP SECRET<br>'+(IG_APP_SECRET?'READY':'MISSING')+'</div><div class="stat '+(IG_ACCESS_TOKEN?'ok':'bad')+'">ACCESS TOKEN<br>'+(IG_ACCESS_TOKEN?'READY':'MISSING')+'</div><div class="stat '+(IG_USER_ID?'ok':'bad')+'">INSTAGRAM<br>'+(IG_USER_ID?'CONNECTED':'NOT STORED')+'</div></div>'+(IG_ACCESS_TOKEN&&IG_USER_ID?'<p class="ok"><b>INSTAGRAM CONNECTED</b></p>':'<p><a class="button" href="/connect">CONNECT INSTAGRAM</a></p>')+'<h2>TODAY / '+date+'</h2>'+cards+'<p class="note">Schedule: 10:00 · 13:00 · 16:00 · 19:00 · 22:00 Europe/Bucharest. Videos are 1080×1920, H.264 + AAC, 24 fps.</p></main>';
 }
 
 http.createServer(async(req,res)=>{
