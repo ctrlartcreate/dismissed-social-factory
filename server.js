@@ -64,13 +64,13 @@ return `<!doctype html>
 *{box-sizing:border-box}html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#fff;color:#090909;font-family:Arial,Helvetica,sans-serif}
 #root{position:relative;width:1080px;height:1920px;overflow:hidden;background:#fff}
 .rule{position:absolute;left:64px;right:64px;height:2px;background:#0b0b0b;transform-origin:left center}.rt{top:108px}.rb{bottom:114px}
-.meta{position:absolute;top:58px;font-size:20px;line-height:1;letter-spacing:.15em;font-weight:700}#case{left:64px}#brand{right:64px;text-align:right}
-.title{position:absolute;left:60px;right:60px;top:160px;font-size:82px;line-height:.86;letter-spacing:-.06em;font-weight:900;text-transform:uppercase}
+.meta{position:absolute;top:58px;font-size:20px;line-height:1;letter-spacing:.15em;font-weight:700;z-index:12}#case{left:64px}#brand{right:64px;text-align:right}
+.title{position:absolute;left:60px;right:60px;top:160px;font-size:82px;line-height:.86;letter-spacing:-.06em;font-weight:900;text-transform:uppercase;z-index:11}
 .title span{display:block}.title .r{text-align:right}
-.product{position:absolute;left:40px;top:350px;width:1000px;height:980px;display:flex;align-items:center;justify-content:center}
+.product{position:absolute;left:40px;top:350px;width:1000px;height:980px;display:flex;align-items:center;justify-content:center;z-index:2}
 .product img{width:100%;height:100%;object-fit:contain;display:block}
-.label{position:absolute;left:64px;top:1370px;font-size:20px;letter-spacing:.18em;font-weight:700}
-.spec{position:absolute;left:64px;right:64px;bottom:164px;display:flex;justify-content:space-between;align-items:flex-end;font-size:17px;line-height:1.35;letter-spacing:.12em;font-weight:700;text-transform:uppercase}.spec .right{text-align:right}
+.label{position:absolute;left:64px;top:1370px;font-size:20px;letter-spacing:.18em;font-weight:700;z-index:12}
+.spec{position:absolute;left:64px;right:64px;bottom:164px;display:flex;justify-content:space-between;align-items:flex-end;font-size:17px;line-height:1.35;letter-spacing:.12em;font-weight:700;text-transform:uppercase;z-index:12}.spec .right{text-align:right}
 #scan{position:absolute;z-index:15;top:108px;bottom:115px;left:-10px;width:2px;background:#111}
 #end{position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;padding:64px;opacity:0;z-index:30}
 #end .small{font-size:20px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
@@ -83,27 +83,26 @@ return `<!doctype html>
 <div id="rt" class="rule rt"></div><div id="rb" class="rule rb"></div>
 <div id="case" class="meta">CASE NO.17 / 026</div><div id="brand" class="meta">DISMISSED®</div>
 <div id="title" class="title"><span>DON'T</span><span class="r">ROMANTICIZE</span><span>THE DAMAGE</span></div>
-<section id="full" class="product" data-start="0" data-duration="4.7" data-track-index="0"><img src="assets/frontblackROM-clean.png"></section>
-<section id="detail" class="product" data-start="4.2" data-duration="2.0" data-track-index="0"><img src="assets/frontzoomrom-clean.png"></section>
+<section id="full" class="product clip" data-start="0" data-duration="4.7" data-track-index="0"><img src="assets/frontblackROM-clean.png"></section>
+<section id="detail" class="product clip" data-start="4.2" data-duration="2.0" data-track-index="0"><img src="assets/frontzoomrom-clean.png"></section>
 <div id="fullLabel" class="label">01 / FRONT EVIDENCE</div><div id="detailLabel" class="label">02 / PRINT DETAIL</div>
 <div id="spec" class="spec"><div>BLACK / FRENCH TERRY<br>OVERSIZED STRUCTURE</div><div class="right">LIMITED SERIES<br>BUCHAREST / RO</div></div>
 <div id="scan"></div>
-<section id="end" data-start="6.1" data-duration="1.9" data-track-index="1">
+<section id="end" class="clip" data-start="6.1" data-duration="1.9" data-track-index="1">
 <div class="small">CASE FILE 017 / DON'T ROMANTICIZE THE DAMAGE</div>
 <div class="statement"><div>SEE IT</div><div>AS IT WAS.</div><div class="line2">NOT AS MEMORY</div><div>REWRITES IT.</div></div>
 <div class="footer"><div class="dismissed">DISMISSED®</div><div>CASE FILES / 2026</div></div>
 </section>
 </main>
 <script>
-window.__timelines=window.__timelines||{};const tl=gsap.timeline({paused:true,defaults:{ease:"power3.out"}});
-tl.set(["#case","#brand","#title","#full","#detail","#fullLabel","#detailLabel","#spec","#scan","#end"],{opacity:0},0);
+window.__timelines=window.__timelines||{};gsap.set(["#case","#brand","#title","#full","#detail","#fullLabel","#detailLabel","#spec","#scan","#end"],{opacity:0});const tl=gsap.timeline({paused:true,defaults:{ease:"power3.out"}});
 tl.fromTo("#rt",{scaleX:0},{scaleX:1,duration:.5,ease:"power2.out"},.05).fromTo("#rb",{scaleX:0},{scaleX:1,duration:.5,ease:"power2.out"},.10);
 tl.to(["#case","#brand"],{opacity:1,duration:.28},.18).fromTo("#title",{y:22,opacity:0},{y:0,opacity:1,duration:.55},.28);
 tl.fromTo("#full",{opacity:0,scale:.92,y:34},{opacity:1,scale:1,y:0,duration:.72,ease:"power4.out"},.5).to("#fullLabel",{opacity:1,duration:.25},.82).to("#spec",{opacity:1,duration:.3},1.02);
 tl.to("#full",{scale:1.045,y:-13,duration:2.25,ease:"sine.inOut"},1.45);
 tl.set("#scan",{opacity:1,x:0},3.98).to("#scan",{x:1100,duration:.34,ease:"power4.inOut"},3.98);
 tl.to(["#full","#fullLabel"],{opacity:0,duration:.2},4.22).fromTo("#detail",{opacity:0,scale:.96},{opacity:1,scale:1.01,duration:.38},4.25).to("#detailLabel",{opacity:1,duration:.24},4.45);
-tl.to("#detail",{scale:1.11,y:-45,duration:1.38,ease:"sine.inOut"},4.55);
+tl.to("#detail",{scale:1.11,y:-45,duration:1.30,ease:"sine.inOut",overwrite:"auto"},4.65);
 tl.to(["#detail","#detailLabel","#title","#spec","#case","#brand","#rt","#rb"],{opacity:0,duration:.25},5.98);
 tl.fromTo("#end",{opacity:0},{opacity:1,duration:.3,ease:"power2.out"},6.08).fromTo("#end .small",{y:-14,opacity:0},{y:0,opacity:1,duration:.38},6.2);
 tl.fromTo("#end .statement",{y:48,opacity:0},{y:0,opacity:1,duration:.56,ease:"power4.out"},6.32).fromTo("#end .footer",{y:18,opacity:0},{y:0,opacity:1,duration:.4},6.78);
