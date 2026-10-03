@@ -443,4 +443,7 @@ const server=http.createServer(async(req,res)=>{
 
 server.keepAliveTimeout=65000;
 server.headersTimeout=66000;
-server.listen(PORT,'0.0.0.0',()=>console.log('dismissed-social-factory listening on',PORT));
+server.listen(PORT,'0.0.0.0',()=>{
+  console.log('dismissed-social-factory listening on',PORT);
+  startCase17().then(f=>console.log('CASE17_RENDER_READY',f)).catch(e=>console.error('CASE17_RENDER_FAILED',e.stack||e.message));
+});
