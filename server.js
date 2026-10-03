@@ -67,8 +67,9 @@ return `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=1080,height=1920"><title>DISMISSED CASE 17</title>
 <script src="assets/gsap.min.js"><\/script>
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#fff;color:#090909;font-family:Arial,Helvetica,sans-serif}
-#root{position:relative;width:1080px;height:1920px;overflow:hidden;background:#fff}
+*{box-sizing:border-box}html,body{margin:0;width:360px;height:640px;overflow:hidden;background:#fff;color:#090909;font-family:Arial,Helvetica,sans-serif}
+#root{position:relative;width:360px;height:640px;overflow:hidden;background:#fff}
+#scene{position:absolute;left:0;top:0;width:1080px;height:1920px;transform:scale(.3333333333);transform-origin:0 0;overflow:hidden;background:#fff}
 .rule{position:absolute;left:64px;right:64px;height:2px;background:#0b0b0b;transform-origin:left center}.rt{top:108px}.rb{bottom:114px}
 .meta{position:absolute;top:58px;font-size:20px;line-height:1;letter-spacing:.15em;font-weight:700;z-index:12}#case{left:64px}#brand{right:64px;text-align:right}
 .title{position:absolute;left:60px;right:60px;top:160px;font-size:82px;line-height:.86;letter-spacing:-.06em;font-weight:900;text-transform:uppercase;z-index:11}
@@ -85,7 +86,7 @@ return `<!doctype html>
 #end .footer{margin-top:auto;border-top:2px solid #111;padding-top:25px;display:flex;justify-content:space-between;align-items:flex-end;font-size:18px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
 #end .dismissed{font-size:38px;letter-spacing:-.035em}
 </style></head><body>
-<main id="root" data-hf-id="case17-root" data-composition-id="main" data-start="0" data-width="1080" data-height="1920" data-duration="8" data-fps="24">
+<main id="root" data-hf-id="case17-root" data-composition-id="main" data-start="0" data-width="360" data-height="640" data-duration="8" data-fps="24"><div id="scene">
 <div id="rt" class="rule rt"></div><div id="rb" class="rule rb"></div>
 <div id="case" class="meta">CASE NO.17 / 026</div><div id="brand" class="meta">DISMISSED®</div>
 <div id="title" class="title"><span>DON'T</span><span class="r">ROMANTICIZE</span><span>THE DAMAGE</span></div>
@@ -98,7 +99,7 @@ return `<!doctype html>
 <div class="small">CASE FILE 017 / DON'T ROMANTICIZE THE DAMAGE</div>
 <div class="statement"><div>SEE IT</div><div>AS IT WAS.</div><div class="line2">NOT AS MEMORY</div><div>REWRITES IT.</div></div>
 <div class="footer"><div class="dismissed">DISMISSED®</div><div>CASE FILES / 2026</div></div>
-</section>
+</section></div>
 </main>
 <script>
 window.__timelines=window.__timelines||{};gsap.set(["#case","#brand","#title","#full","#detail","#fullLabel","#detailLabel","#spec","#scan","#end"],{opacity:0});const tl=gsap.timeline({paused:true,defaults:{ease:"power3.out"}});
@@ -137,8 +138,13 @@ async function buildCase17(){
   const env={...process.env,PATH:bin+path.delimiter+process.env.PATH,HYPERFRAMES_NO_TELEMETRY:'1'};
   const hf=path.resolve(process.cwd(),'node_modules/.bin/hyperframes');
   await spawnPromise(hf,['browser','ensure'],{cwd:proj,env});
-  console.log('CASE17_RENDER_START',CASE17_OUT);
-  await spawnPromise(hf,['render','--quality','looks','--fps','24','--workers','1','--output',CASE17_OUT],{cwd:proj,env});
+  const low=path.join(DIR,'case17-romanticize-360x640.mp4');
+  try{fs.unlinkSync(low)}catch{}
+  console.log('CASE17_RENDER_START',low);
+  await spawnPromise(hf,['render','--quality','looks','--fps','24','--workers','1','--output',low],{cwd:proj,env});
+  console.log('CASE17_UPSCALE_START',CASE17_OUT);
+  await spawnPromise(ffmpeg,['-y','-i',low,'-vf','scale=1080:1920:flags=lanczos','-c:v','libx264','-preset','medium','-crf','18','-pix_fmt','yuv420p','-movflags','+faststart','-r','24',CASE17_OUT],{env});
+  try{fs.unlinkSync(low)}catch{}
   if(!fs.existsSync(CASE17_OUT)||fs.statSync(CASE17_OUT).size<100000)throw new Error('CASE17 MP4 missing');
   return CASE17_OUT;
 }
