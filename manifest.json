@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-10-03T06:40:49.352670Z",
+  "dates": [
+    "2026-10-03",
+    "2026-10-04"
+  ],
+  "engine": "V8_PRO_MAX",
+  "audioMandatory": true,
+  "productLock": true,
+  "publishReady": true,
+  "scheduleTimezone": "Europe/Bucharest",
+  "schedule": [
+    "10:00",
+    "13:00",
+    "16:00",
+    "19:00",
+    "22:00"
+  ]
+}
