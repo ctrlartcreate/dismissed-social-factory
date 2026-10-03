@@ -3,6 +3,8 @@ const fs=require('fs');
 const path=require('path');
 const cp=require('child_process');
 const ffmpeg=require('ffmpeg-static');
+const ffprobe=require('ffprobe-static').path;
+const sharp=require('sharp');
 
 const PORT=process.env.PORT||10000;
 const BASE=process.env.PUBLIC_BASE_URL||'https://dismissed-social-factory.onrender.com';
@@ -14,6 +16,129 @@ const GRAPH_VERSION=process.env.GRAPH_VERSION||'v26.0';
 const ADMIN_KEY=process.env.ADMIN_KEY||'';
 const DIR='/tmp/dismissed-social-factory';
 fs.mkdirSync(DIR,{recursive:true});
+
+const CASE17={
+  title:"DON'T ROMANTICIZE THE DAMAGE",
+  caseNo:'17',
+  image:'https://cdn.shopify.com/s/files/1/0989/0460/5011/files/frontblackROM.png?v=1790956869',
+  zoom:'https://cdn.shopify.com/s/files/1/0989/0460/5011/files/frontzoomrom.png?v=1790956869'
+};
+const CASE17_OUT=path.join(DIR,'case17-romanticize.mp4');
+let case17Job=null;
+
+async function cleanConnectedWhite(input,output){
+  const {data,info}=await sharp(input).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+  const w=info.width,h=info.height,c=info.channels,idx=(x,y)=>(y*w+x)*c;
+  const patch=Math.max(8,Math.min(32,Math.floor(Math.min(w,h)*0.02))),samples=[];
+  for(const [sx,sy] of [[0,0],[w-patch,0],[0,h-patch],[w-patch,h-patch]]){
+    for(let y=sy;y<sy+patch;y+=2)for(let x=sx;x<sx+patch;x+=2){
+      const i=idx(x,y);samples.push([data[i],data[i+1],data[i+2]]);
+    }
+  }
+  const bg=[0,1,2].map(k=>{const a=samples.map(v=>v[k]).sort((a,b)=>a-b);return a[Math.floor(a.length/2)]});
+  const seen=new Uint8Array(w*h),qx=new Int32Array(w*h),qy=new Int32Array(w*h);let head=0,tail=0;
+  const isBg=(x,y)=>{const i=idx(x,y),r=data[i],g=data[i+1],b=data[i+2],d=Math.hypot(r-bg[0],g-bg[1],b-bg[2]);return Math.min(r,g,b)>145&&d<105};
+  const push=(x,y)=>{const p=y*w+x;if(seen[p]||!isBg(x,y))return;seen[p]=1;qx[tail]=x;qy[tail]=y;tail++};
+  for(let x=0;x<w;x++){push(x,0);push(x,h-1)} for(let y=0;y<h;y++){push(0,y);push(w-1,y)}
+  while(head<tail){const x=qx[head],y=qy[head++];if(x>0)push(x-1,y);if(x<w-1)push(x+1,y);if(y>0)push(x,y-1);if(y<h-1)push(x,y+1)}
+  for(let p=0;p<w*h;p++)if(seen[p]){const i=p*c;data[i]=255;data[i+1]=255;data[i+2]=255;data[i+3]=255}
+  await sharp(data,{raw:info}).png({compressionLevel:9}).toFile(output);
+}
+
+function spawnPromise(cmd,args,opts={}){
+  return new Promise((resolve,reject)=>{
+    let stderr='';
+    const p=cp.spawn(cmd,args,{stdio:['ignore','pipe','pipe'],...opts});
+    p.stdout.on('data',d=>console.log('[case17]',d.toString().trim()));
+    p.stderr.on('data',d=>{stderr=(stderr+d.toString()).slice(-20000);console.log('[case17]',d.toString().trim())});
+    p.on('error',reject);
+    p.on('close',code=>code===0?resolve():reject(new Error(stderr||cmd+' exited '+code)));
+  });
+}
+
+function case17Html(){
+return `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=1080,height=1920"><title>DISMISSED CASE 17</title>
+<script src="assets/gsap.min.js"><\/script>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#fff;color:#090909;font-family:Arial,Helvetica,sans-serif}
+#root{position:relative;width:1080px;height:1920px;overflow:hidden;background:#fff}
+.rule{position:absolute;left:64px;right:64px;height:2px;background:#0b0b0b;transform-origin:left center}.rt{top:108px}.rb{bottom:114px}
+.meta{position:absolute;top:58px;font-size:20px;line-height:1;letter-spacing:.15em;font-weight:700}#case{left:64px}#brand{right:64px;text-align:right}
+.title{position:absolute;left:60px;right:60px;top:160px;font-size:82px;line-height:.86;letter-spacing:-.06em;font-weight:900;text-transform:uppercase}
+.title span{display:block}.title .r{text-align:right}
+.product{position:absolute;left:40px;top:350px;width:1000px;height:980px;display:flex;align-items:center;justify-content:center}
+.product img{width:100%;height:100%;object-fit:contain;display:block}
+.label{position:absolute;left:64px;top:1370px;font-size:20px;letter-spacing:.18em;font-weight:700}
+.spec{position:absolute;left:64px;right:64px;bottom:164px;display:flex;justify-content:space-between;align-items:flex-end;font-size:17px;line-height:1.35;letter-spacing:.12em;font-weight:700;text-transform:uppercase}.spec .right{text-align:right}
+#scan{position:absolute;z-index:15;top:108px;bottom:115px;left:-10px;width:2px;background:#111}
+#end{position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;padding:64px;opacity:0;z-index:30}
+#end .small{font-size:20px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+#end .statement{margin-top:410px;font-size:92px;line-height:.9;letter-spacing:-.058em;font-weight:900;text-transform:uppercase}
+#end .line2{margin-top:30px}
+#end .footer{margin-top:auto;border-top:2px solid #111;padding-top:25px;display:flex;justify-content:space-between;align-items:flex-end;font-size:18px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+#end .dismissed{font-size:38px;letter-spacing:-.035em}
+</style></head><body>
+<main id="root" data-hf-id="case17-root" data-composition-id="main" data-start="0" data-width="1080" data-height="1920" data-duration="8" data-fps="24">
+<div id="rt" class="rule rt"></div><div id="rb" class="rule rb"></div>
+<div id="case" class="meta">CASE NO.17 / 026</div><div id="brand" class="meta">DISMISSED®</div>
+<div id="title" class="title"><span>DON'T</span><span class="r">ROMANTICIZE</span><span>THE DAMAGE</span></div>
+<section id="full" class="product" data-start="0" data-duration="4.7" data-track-index="0"><img src="assets/frontblackROM-clean.png"></section>
+<section id="detail" class="product" data-start="4.2" data-duration="2.0" data-track-index="0"><img src="assets/frontzoomrom-clean.png"></section>
+<div id="fullLabel" class="label">01 / FRONT EVIDENCE</div><div id="detailLabel" class="label">02 / PRINT DETAIL</div>
+<div id="spec" class="spec"><div>BLACK / FRENCH TERRY<br>OVERSIZED STRUCTURE</div><div class="right">LIMITED SERIES<br>BUCHAREST / RO</div></div>
+<div id="scan"></div>
+<section id="end" data-start="6.1" data-duration="1.9" data-track-index="1">
+<div class="small">CASE FILE 017 / DON'T ROMANTICIZE THE DAMAGE</div>
+<div class="statement"><div>SEE IT</div><div>AS IT WAS.</div><div class="line2">NOT AS MEMORY</div><div>REWRITES IT.</div></div>
+<div class="footer"><div class="dismissed">DISMISSED®</div><div>CASE FILES / 2026</div></div>
+</section>
+</main>
+<script>
+window.__timelines=window.__timelines||{};const tl=gsap.timeline({paused:true,defaults:{ease:"power3.out"}});
+tl.set(["#case","#brand","#title","#full","#detail","#fullLabel","#detailLabel","#spec","#scan","#end"],{opacity:0},0);
+tl.fromTo("#rt",{scaleX:0},{scaleX:1,duration:.5,ease:"power2.out"},.05).fromTo("#rb",{scaleX:0},{scaleX:1,duration:.5,ease:"power2.out"},.10);
+tl.to(["#case","#brand"],{opacity:1,duration:.28},.18).fromTo("#title",{y:22,opacity:0},{y:0,opacity:1,duration:.55},.28);
+tl.fromTo("#full",{opacity:0,scale:.92,y:34},{opacity:1,scale:1,y:0,duration:.72,ease:"power4.out"},.5).to("#fullLabel",{opacity:1,duration:.25},.82).to("#spec",{opacity:1,duration:.3},1.02);
+tl.to("#full",{scale:1.045,y:-13,duration:2.25,ease:"sine.inOut"},1.45);
+tl.set("#scan",{opacity:1,x:0},3.98).to("#scan",{x:1100,duration:.34,ease:"power4.inOut"},3.98);
+tl.to(["#full","#fullLabel"],{opacity:0,duration:.2},4.22).fromTo("#detail",{opacity:0,scale:.96},{opacity:1,scale:1.01,duration:.38},4.25).to("#detailLabel",{opacity:1,duration:.24},4.45);
+tl.to("#detail",{scale:1.11,y:-45,duration:1.38,ease:"sine.inOut"},4.55);
+tl.to(["#detail","#detailLabel","#title","#spec","#case","#brand","#rt","#rb"],{opacity:0,duration:.25},5.98);
+tl.fromTo("#end",{opacity:0},{opacity:1,duration:.3,ease:"power2.out"},6.08).fromTo("#end .small",{y:-14,opacity:0},{y:0,opacity:1,duration:.38},6.2);
+tl.fromTo("#end .statement",{y:48,opacity:0},{y:0,opacity:1,duration:.56,ease:"power4.out"},6.32).fromTo("#end .footer",{y:18,opacity:0},{y:0,opacity:1,duration:.4},6.78);
+tl.to({}, {duration:.01},7.99);window.__timelines.main=tl;
+<\/script></body></html>`;
+}
+
+async function buildCase17(){
+  if(fs.existsSync(CASE17_OUT)&&fs.statSync(CASE17_OUT).size>100000)return CASE17_OUT;
+  const proj=path.join(DIR,'case17-hyperframes'),assets=path.join(proj,'assets');
+  fs.rmSync(proj,{recursive:true,force:true});fs.mkdirSync(assets,{recursive:true});
+  const front=path.join(assets,'frontblackROM.png'),zoom=path.join(assets,'frontzoomrom.png');
+  await download(CASE17.image,front);await download(CASE17.zoom,zoom);
+  await cleanConnectedWhite(front,path.join(assets,'frontblackROM-clean.png'));
+  await cleanConnectedWhite(zoom,path.join(assets,'frontzoomrom-clean.png'));
+  fs.copyFileSync(require.resolve('gsap/dist/gsap.min.js'),path.join(assets,'gsap.min.js'));
+  fs.writeFileSync(path.join(proj,'index.html'),case17Html());
+  fs.writeFileSync(path.join(proj,'hyperframes.json'),JSON.stringify({
+    $schema:'https://hyperframes.heygen.com/schema/hyperframes.json',
+    registry:'https://raw.githubusercontent.com/heygen-com/hyperframes/main/registry',
+    paths:{blocks:'compositions',components:'compositions/components',assets:'assets'},
+    authoringSkill:'product-launch-video'
+  },null,2));
+  const bin=path.join(DIR,'hf-bin');fs.mkdirSync(bin,{recursive:true});
+  for(const [name,target] of [['ffmpeg',ffmpeg],['ffprobe',ffprobe]]){const link=path.join(bin,name);try{fs.unlinkSync(link)}catch{}fs.symlinkSync(target,link)}
+  const env={...process.env,PATH:bin+path.delimiter+process.env.PATH,HYPERFRAMES_NO_TELEMETRY:'1'};
+  const hf=path.resolve(process.cwd(),'node_modules/.bin/hyperframes');
+  await spawnPromise(hf,['browser','ensure'],{cwd:proj,env});
+  await spawnPromise(hf,['check'],{cwd:proj,env});
+  await spawnPromise(hf,['render','--quality','looks','--fps','24','--workers','1','--output',CASE17_OUT],{cwd:proj,env});
+  if(!fs.existsSync(CASE17_OUT)||fs.statSync(CASE17_OUT).size<100000)throw new Error('CASE17 MP4 missing');
+  return CASE17_OUT;
+}
+function startCase17(){if(fs.existsSync(CASE17_OUT)&&fs.statSync(CASE17_OUT).size>100000)return Promise.resolve(CASE17_OUT);if(case17Job)return case17Job;case17Job=buildCase17().finally(()=>case17Job=null);return case17Job}
+
 
 const TIMES=[10,13,16,19,22];
 const PRODUCTS=[
@@ -234,7 +359,17 @@ function dashboard(){
 const server=http.createServer(async(req,res)=>{
   const u=new URL(req.url,'http://local');
   try{
-    if(u.pathname==='/health')return sendJson(res,200,{ok:true,connected:!!(IG_ACCESS_TOKEN&&IG_USER_ID),renderJobs:jobs.size});
+    if(u.pathname==='/health')return sendJson(res,200,{ok:true,connected:!!(IG_ACCESS_TOKEN&&IG_USER_ID),renderJobs:jobs.size,case17:fs.existsSync(CASE17_OUT)?'ready':(case17Job?'rendering':'not-rendered')});
+    if(u.pathname==='/api/case17'){
+      if(fs.existsSync(CASE17_OUT)&&fs.statSync(CASE17_OUT).size>100000)return sendJson(res,200,{ok:true,status:'ready',url:'/case17-romanticize.mp4'});
+      startCase17().catch(e=>console.error('case17 render failed',e.stack||e.message));
+      return sendJson(res,202,{ok:true,status:'rendering'});
+    }
+    if(u.pathname==='/case17-romanticize.mp4'){
+      if(fs.existsSync(CASE17_OUT)&&fs.statSync(CASE17_OUT).size>100000)return streamVideo(req,res,CASE17_OUT);
+      startCase17().catch(e=>console.error('case17 render failed',e.stack||e.message));
+      return sendHtml(res,202,'<!doctype html><meta http-equiv="refresh" content="5"><body style="font-family:Arial;background:#fff;color:#111;padding:40px"><h1>CASE 17 / RENDERING</h1><p>DON\'T ROMANTICIZE THE DAMAGE</p></body>');
+    }
     if(u.pathname==='/api/instagram-status')return sendJson(res,200,await instagramStatus());
 
     if(u.pathname==='/connect'){
