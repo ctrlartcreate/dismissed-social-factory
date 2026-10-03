@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "scripts/generate-media.js"
+      - "scripts/generate-media-v8.py"
       - ".github/workflows/build-media.yml"
   schedule:
     - cron: "20 1 * * *"
@@ -25,14 +26,18 @@ jobs:
       - name: Checkout app
         uses: actions/checkout@v4
 
-      - name: Ensure FFmpeg
+      - name: Install media dependencies
         run: |
           ffmpeg -version || (sudo apt-get update && sudo apt-get install -y ffmpeg)
+          sudo apt-get update
+          sudo apt-get install -y fontconfig fonts-inter fonts-noto-core
+          python3 -m pip install --upgrade pip
+          python3 -m pip install pillow numpy opencv-python-headless
 
       - name: Generate today and tomorrow
         env:
           MEDIA_OUT: /tmp/dismissed-media
-        run: python3 scripts/generate-media-v4.py
+        run: python3 scripts/generate-media-v8.py
 
       - name: HARD RULE - every reel must contain audio
         run: |
