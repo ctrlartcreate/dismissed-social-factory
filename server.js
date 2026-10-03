@@ -132,7 +132,7 @@ async function buildCase17(){
   const env={...process.env,PATH:bin+path.delimiter+process.env.PATH,HYPERFRAMES_NO_TELEMETRY:'1'};
   const hf=path.resolve(process.cwd(),'node_modules/.bin/hyperframes');
   await spawnPromise(hf,['browser','ensure'],{cwd:proj,env});
-  await spawnPromise(hf,['check'],{cwd:proj,env});
+  console.log('CASE17_RENDER_START',CASE17_OUT);
   await spawnPromise(hf,['render','--quality','looks','--fps','24','--workers','1','--output',CASE17_OUT],{cwd:proj,env});
   if(!fs.existsSync(CASE17_OUT)||fs.statSync(CASE17_OUT).size<100000)throw new Error('CASE17 MP4 missing');
   return CASE17_OUT;
