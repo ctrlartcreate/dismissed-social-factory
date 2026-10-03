@@ -143,7 +143,7 @@ async function buildCase17(){
   console.log('CASE17_RENDER_START',low);
   await spawnPromise(hf,['render','--quality','looks','--fps','24','--workers','1','--output',low],{cwd:proj,env});
   console.log('CASE17_UPSCALE_START',CASE17_OUT);
-  await spawnPromise(ffmpeg,['-y','-i',low,'-vf','scale=1080:1920:flags=lanczos','-c:v','libx264','-preset','medium','-crf','18','-pix_fmt','yuv420p','-movflags','+faststart','-r','24',CASE17_OUT],{env});
+  await spawnPromise(ffmpeg,['-y','-i',low,'-vf','scale=1080:1920:flags=lanczos','-c:v','libx264','-preset','ultrafast','-tune','zerolatency','-crf','17','-threads','1','-x264-params','threads=1:lookahead_threads=1:sync-lookahead=0:rc-lookahead=0','-pix_fmt','yuv420p','-movflags','+faststart','-r','24',CASE17_OUT],{env});
   try{fs.unlinkSync(low)}catch{}
   if(!fs.existsSync(CASE17_OUT)||fs.statSync(CASE17_OUT).size<100000)throw new Error('CASE17 MP4 missing');
   return CASE17_OUT;
