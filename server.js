@@ -17,6 +17,9 @@ const ADMIN_KEY=process.env.ADMIN_KEY||'';
 const DIR='/tmp/dismissed-social-factory';
 fs.mkdirSync(DIR,{recursive:true});
 
+sharp.cache(false);
+sharp.concurrency(1);
+
 const CASE17={
   title:"DON'T ROMANTICIZE THE DAMAGE",
   caseNo:'17',
@@ -42,7 +45,10 @@ async function cleanConnectedWhite(input,output){
   for(let x=0;x<w;x++){push(x,0);push(x,h-1)} for(let y=0;y<h;y++){push(0,y);push(w-1,y)}
   while(head<tail){const x=qx[head],y=qy[head++];if(x>0)push(x-1,y);if(x<w-1)push(x+1,y);if(y>0)push(x,y-1);if(y<h-1)push(x,y+1)}
   for(let p=0;p<w*h;p++)if(seen[p]){const i=p*c;data[i]=255;data[i+1]=255;data[i+2]=255;data[i+3]=255}
-  await sharp(data,{raw:info}).png({compressionLevel:9}).toFile(output);
+  await sharp(data,{raw:info})
+    .resize({width:1200,height:1200,fit:'inside',withoutEnlargement:true,kernel:'lanczos3'})
+    .png({compressionLevel:9})
+    .toFile(output);
 }
 
 function spawnPromise(cmd,args,opts={}){
