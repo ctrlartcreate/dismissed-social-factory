@@ -384,7 +384,8 @@ const server=http.createServer(async(req,res)=>{
     if(u.pathname==='/api/instagram-status')return sendJson(res,200,await instagramStatus());
 
     if(u.pathname==='/connect'){
-      if(IG_ACCESS_TOKEN&&IG_USER_ID){res.writeHead(302,{location:'/'});return res.end()}
+      const force=u.searchParams.get('force')==='1';
+      if(IG_ACCESS_TOKEN&&IG_USER_ID&&!force){res.writeHead(302,{location:'/'});return res.end()}
       if(!IG_APP_SECRET){res.statusCode=500;return res.end('IG_APP_SECRET missing.')}
       const redirect=BASE+'/auth/instagram/callback';
       const auth='https://www.instagram.com/oauth/authorize?'+new URLSearchParams({
