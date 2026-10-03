@@ -33,9 +33,11 @@ async function graph(path,opt={}){
 async function mediaReady(date,slot){
   const manifest=await json(MEDIA+'/manifest.json');
   if(manifest.publishReady!==true) return {ok:false,reason:'publish-gate-closed'};
+  if(manifest.engine!=='V8_PRO_MAX') return {ok:false,reason:'wrong-manifest-engine'};
   const meta=await json(MEDIA+'/'+date+'/'+slot+'.json');
   if(meta.audio!==true) return {ok:false,reason:'audio-required'};
   if(meta.productLock!==true) return {ok:false,reason:'product-lock-required'};
+  if(meta.engine!=='V8_PRO_MAX') return {ok:false,reason:'wrong-video-engine'};
   return {ok:true,meta};
 }
 async function recent(){
@@ -96,11 +98,17 @@ async function publish(date,slot){
     return;
   }
   const x=localParts();
-  const slot=TIMES.indexOf(Number(x.hour));
-  const minute=Number(x.minute);
-  if(slot<0 || minute>24){
-    console.log('No posting slot now:',x.hour+':'+x.minute);
+  const nowMin=Number(x.hour)*60+Number(x.minute);
+  let slot=-1;
+  for(let i=TIMES.length-1;i>=0;i--){
+    const due=TIMES[i]*60;
+    const age=nowMin-due;
+    if(age>=0 && age<=90){ slot=i; break; }
+  }
+  if(slot<0){
+    console.log('No due slot in 90-minute catch-up window:',x.hour+':'+x.minute);
     return;
   }
+  console.log('Due slot',slot,'local',x.hour+':'+x.minute,'scheduled',String(TIMES[slot]).padStart(2,'0')+':00');
   await publish(dayKey(),slot);
 })().catch(e=>{console.error(e);process.exit(1)});
