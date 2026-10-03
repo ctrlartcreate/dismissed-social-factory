@@ -1,8 +1,17 @@
 const MEDIA='https://dismissed-social-media.onrender.com';
 const VERSION='v26.0';
 const TIMES=[10,13,16,19,22];
-const TOKEN=process.env.IG_ACCESS_TOKEN||'';
-const USER=process.env.IG_USER_ID||'';
+function cleanSecret(v,name){
+  v=String(v||'').trim();
+  const re=new RegExp('^'+name+'\\s*=\\s*','i');
+  v=v.replace(re,'').trim();
+  if((v.startsWith('"')&&v.endsWith('"'))||(v.startsWith("'")&&v.endsWith("'"))){
+    v=v.slice(1,-1).trim();
+  }
+  return v;
+}
+const TOKEN=cleanSecret(process.env.IG_ACCESS_TOKEN,'IG_ACCESS_TOKEN');
+const USER=cleanSecret(process.env.IG_USER_ID,'IG_USER_ID');
 
 function localParts(){
   const p=new Intl.DateTimeFormat('en-GB',{
@@ -103,10 +112,10 @@ async function publish(date,slot){
   for(let i=TIMES.length-1;i>=0;i--){
     const due=TIMES[i]*60;
     const age=nowMin-due;
-    if(age>=0 && age<=90){ slot=i; break; }
+    if(age>=0 && age<=180){ slot=i; break; }
   }
   if(slot<0){
-    console.log('No due slot in 90-minute catch-up window:',x.hour+':'+x.minute);
+    console.log('No due slot in 180-minute catch-up window:',x.hour+':'+x.minute);
     return;
   }
   console.log('Due slot',slot,'local',x.hour+':'+x.minute,'scheduled',String(TIMES[slot]).padStart(2,'0')+':00');
