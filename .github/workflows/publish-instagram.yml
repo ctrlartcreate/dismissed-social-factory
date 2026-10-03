@@ -1,6 +1,11 @@
 name: Publish Dismissed Instagram Reels
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/publish-instagram.js"
+      - ".github/workflows/publish-instagram.yml"
   schedule:
     - cron: "*/10 * * * *"
   workflow_dispatch:
