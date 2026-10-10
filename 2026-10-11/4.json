@@ -1,0 +1,12 @@
+{
+  "title": "FUTURE ME",
+  "caseNo": "16",
+  "date": "2026-10-11",
+  "slot": 4,
+  "audio": true,
+  "productLock": true,
+  "engine": "V8_PRO_MAX",
+  "source": "SHOPIFY_REAL_PRODUCT",
+  "format": "1080x1920",
+  "fps": 24
+}
