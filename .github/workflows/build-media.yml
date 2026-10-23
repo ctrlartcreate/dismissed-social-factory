@@ -1,14 +1,6 @@
 name: Build Dismissed media
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "scripts/generate-media.js"
-      - "scripts/generate-media-v8.py"
-      - ".github/workflows/build-media.yml"
-  schedule:
-    - cron: "20 1 * * *"
   workflow_dispatch:
 
 permissions:
